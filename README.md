@@ -25,13 +25,27 @@ It wrote the code, ran away, and now the game is unplayable.
 
 ## 📝 Document Your Experience
 
-- [ ] Describe the game's purpose.
-- [ ] Detail which bugs you found.
-- [ ] Explain what fixes you applied.
+- [x] Describe the game's purpose.
+
+  It is a number guessing game. The player picks a difficulty (Easy/Normal/Hard), which sets a numeric range and attempt limit. Each round, a secret number is randomly chosen and the player submits guesses, receiving "Go Higher" or "Go Lower" hints after each one. Points are awarded for winning and deducted per wrong guess. The goal is to guess the secret number before running out of attempts.
+
+- [x] Detail which bugs you found.
+
+  1. **Swapped hints** — "Go Higher" and "Go Lower" messages were reversed, so the hints pointed the player in the wrong direction.
+  2. **Hint out of sync with guess** — On a win or loss, `st.rerun()` was not called, so the feedback message (e.g. "🎉 Correct!") stored in `session_state` was never displayed on screen at the right time. The old hint from the previous guess remained visible.
+  3. **Balloons firing on every rerun** — After winning, `st.balloons()` was called unconditionally inside the status check block, so it triggered again every time the page re-rendered (e.g. if the user submitted another guess).
+  4. **No "already won" message** — There was no distinction between the first win render and subsequent renders, so the "You already won" message never appeared and the game accepted more guesses after a win.
+
+- [x] Explain what fixes you applied.
+
+  1. **Fixed swapped hints** in `logic_utils.py` — swapped the return values so "Too High" maps to "Go LOWER!" and "Too Low" maps to "Go HIGHER!".
+  2. **Added `st.rerun()` to all branches** in `app.py` — win, loss, and incorrect guesses all now call `st.rerun()`, so the hint in `session_state` is always displayed in sync with the latest guess result.
+  3. **Moved win/loss display to the status-check section** — removed `st.success`/`st.error` from the submit block and handled them in the top-level status check that runs first on every rerun, keeping display logic in one place.
+  4. **Added a two-phase win status** — status transitions from `"won"` (first display: balloons + full win message) to `"won_seen"` (subsequent renders: "You already won" message, no balloons). `st.stop()` prevents any further guess processing in both states.
 
 ## 📸 Demo
 
-- [ ] [Insert a screenshot of your fixed, winning game here]
+![Game ScreenShot](game_screenshot.png)
 
 ## 🚀 Stretch Features
 
